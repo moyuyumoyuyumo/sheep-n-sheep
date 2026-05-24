@@ -8,8 +8,9 @@ import { level02 } from './level-02.js';
 import { level03 } from './level-03.js';
 import { level04 } from './level-04.js';
 import { level05 } from './level-05.js';
+import { level06 } from './level-06.js';
 
-export const allLevels = [level01, level02, level03, level04, level05];
+export const allLevels = [level01, level02, level03, level04, level05, level06];
 
 /**
  * 按 id 找关卡。找不到就返回第一关（兜底 idle 状态保护）。

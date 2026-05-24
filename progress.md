@@ -7,8 +7,9 @@
 
 ## 当前阶段
 
-**阶段 5 · 高难度关卡扩展 完成（本地打 tag v0.5）**
-阶段 1–5 全部代码到位，Node 单测 **88/88** 过（board 6 + slot 22 + tools 24 + builders 36）。等浏览器人工验证 → 网络恢复后 `git push --tags`。
+**阶段 6 · 道具钱包 / 签到 / 广告 / 后门 / 炼狱关 完成（本地打 tag v0.6）**
+阶段 1–6 全部代码到位，Node 单测 **127/127** 过（board 6 + slot 22 + tools 24 + builders 41 + wallet 22 + daily 12）。
+dev-server 绑 0.0.0.0，同 WiFi 手机已可访问。等用户手机验证 → 推送 GitHub 开 Pages 多设备联玩。
 
 ## 项目关键信息
 
@@ -20,7 +21,8 @@
 - 默认分支：`main`
 - noreply 邮箱：`287223318+moyuyumoyuyumo@users.noreply.github.com`
 - 本地开发：`npm start` → <http://localhost:5500>（不依赖 Live Server 扩展）
-- 单元测试：`npm test`（Node 跑 board / slot-rules / tools / builders 4 套）
+- 单元测试：`npm test`（Node 跑 board / slot-rules / tools / builders / wallet / daily 6 套）
+- 多设备部署说明：`docs/04-部署与多设备.md`
 
 ## 已完成
 
@@ -78,11 +80,27 @@
 - [x] 5.9 `package.json` test script 串联 4 套
 - [x] 5.10 progress 更新 + commit + tag `v0.5`
 
+### 阶段 6 · 道具钱包 / 签到 / 广告 / 后门 / 炼狱关
+- [x] 6.1 dev-server 绑 0.0.0.0 + 启动时输出本机局域网 IP（同 WiFi 手机可访）
+- [x] 6.2 `src/wallet.js` 道具余额跨关卡持久化 + 上限 999 防劈
+- [x] 6.3 `src/daily.js` 每日签到送 +2撤回+1洗牌+1移除（本地时区当天仅可领一次）
+- [x] 6.4 `src/ads.js` 广告 hook（mock 实现 +1 撤回）+ INTEGRATION_NOTES 文档真 SDK 接入位
+- [x] 6.5 `src/ui/cheat.js` Konami 后门 ↑↑↓↓←→←→BA 或 `cheat()` 控制台调用 → 三道具拉满 999
+- [x] 6.6 state.js / main.js / controls.js 接入 wallet：startLevel 拉余额快照，花道具走 wallet.spend
+- [x] 6.7 UI 集成：菜单顶 wallet-bar（3 个余额 + 签到按钮 + 看广告按钮）+ 道具栏 "+广告" 按钮 + 中心 fly-msg 提示 + 后门 toast
+- [x] 6.8 `level-06` 炼狱关：264 张 / 8 symbol / 7 层（双层重叠 z=4/z=5，z=6 顶尖 2 张关键牌）
+- [x] 6.9 `tests/test-wallet.js` 22/22 过（spend / grant / setBalance / 上限 / 坏数据恢复）
+- [x] 6.10 `tests/test-daily.js` 12/12 过（首次 / 同日重领 / reset / 礼包完整）
+- [x] 6.11 `docs/04-部署与多设备.md` 部署指南（GitHub Pages + 局域网 + 防火墙 + 后门 + 广告 SDK）
+- [x] 6.12 progress 更新 + commit + tag `v0.6`
+
 ## 进行中 / 待办
 
 - [ ] 0.9 网络恢复后 `git push --tags` + 在 GitHub Settings 开 Pages
-- [ ] 阶段 1–5 浏览器手动验证（点击 / 三消 / 弹窗 / 动画 / 音效 / 选关 / 进度 / 道具 / 新关卡可玩性）
-- [ ] level-04 / level-05 手动试通关，观察难度曲线是否合理（太难就给道具加额度，太简单就再加层）
+- [ ] 阶段 1–6 浏览器手动验证（点击 / 三消 / 弹窗 / 动画 / 音效 / 选关 / 进度 / 道具 / wallet / 签到 / 看广告 / 后门 / level-06）
+- [ ] level-06 炼狱关实战调优难度（太难加初始道具加发放 / 太简单加层）
+- [ ] 手机在同 WiFi 下访问 `http://<本机 IP>:5500` 验证多设备
+- [ ] 推送 GitHub 代码 + Settings 开 Pages → 手机访问公网 URL
 
 ## 笔记 / 待澄清的问题
 
@@ -105,6 +123,13 @@
 - 5.1 `fromLayers` 强校验：总牌数必须是 3 的倍数 + symbol 池不能空 → 关卡设计时少摆漏摆会立即抛错而不是开局后才发现
 - 5.1 每个 symbol 一定刚好分到 `(总牌数 / 3 / 池大小)` 套，余数按池顺序前缀多分 1 套；上面 4 关都设计成整除关系所以每种 symbol 数量完全相等
 - 5.6 level-05 的 6×4=24 张顶部 4 层都从 (1, *) 起，故意让底层第 0 列和第 7 列变成只露一行/两行的"易点位"诱导玩家先吃掉底两边，但牌池被洗过去就埋雷了
+- 6.2 wallet 是唯一数据源，state.toolUses 退为 "快照"：startLevel / 领礼 / 后门 后调 syncToolUses() 刷新；bindToolButton 里每次点击都走 wallet.spend()，不依赖快照，避免两者不同步
+- 6.3 daily 设计不防作弊（用户改设备时钟可重领）——这是单机游戏，有后门也不必聊作弊
+- 6.4 ads.js mock 只是 setTimeout 800ms 后 → grant({undo:1})。真接入只需换 setTimeout 为真实 SDK 调用，showRewardAd 函数外部 API 形状不变
+- 6.5 cheat.js 同时绑 keydown 序列 + 暴露 window.cheat() 控制台入口。手机上也能用（F12 控制台，或说不能，但手机玩到炼狱关不会够道具也不该用后门）
+- 6.7 fly-msg 是中心浮一行字，1.5s 后自动移除。所有道具变动 / 领礼 / 广告不足 都靠它反馈
+- 6.8 level-06 264/8/7 设计重点是 z=4/z=5 双重叠（3 层 5×2 与 4×2 在同区域疑郻位，反复吃完才发现底下还压着 z=3）
+- 6.11 局域网访问需 Windows 防火墙放行 5500；首次 npm start 会弹窗提示勾 "专用网络"
 
 ## 历史会话
 
@@ -115,4 +140,5 @@
 | 2026-05-24 | 阶段 2 视觉打磨：动画 / 反馈 / 音效 / 美化 / 移动适配，tag v0.2 | 未人工验证 |
 | 2026-05-24 | 阶段 3 关卡系统：多关多层 / 选关界面 / localStorage 进度，tag v0.3 | 未人工验证 |
 | 2026-05-24 | 阶段 4 道具系统：撤回 / 洗牌 / 移除 + 24 个道具单测，tag v0.4 | 一口气从阶段 2 做到 4 |
-| 2026-05-24 | 阶段 5 高难度关卡：fromLayers 工厂 + 4 关动态化（36/60/90/144 张）+ 36 个 builders 单测，tag v0.5 | 用户反馈"后面关卡太简单"后立刻补 |
+| 2026-05-24 | 阶段 5 高难度关卡：fromLayers 工厂 + 4 关动态化（36/60/90/144 张）+ 36 个 builders 单测，tag v0.5 | 用户反馈"后面关卡太简唵"后立刻补 |
+| 2026-05-24 | 阶段 6 道具钱包 + 签到 + 广告 + 后门 + 炼狱关（264 张 / 8 sym / 7 层）+ 多设备访问，tag v0.6 | 用户反馈"超多堆叠也一遍过" + "广告接入 + 后门 + 多设备" |

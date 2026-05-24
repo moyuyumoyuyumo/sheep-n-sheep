@@ -39,6 +39,10 @@
                     <span class="tool-name">移除</span>
                     <span class="tool-count" id="tool-count-remove">1</span>
                 </button>
+                <button id="btn-watch-ad-toolbar" class="btn-tool btn-tool-ad" type="button" title="看广告 +1 撤回">
+                    <span class="tool-icon">📺</span>
+                    <span class="tool-name">+广告</span>
+                </button>
             </div>
 
             <p class="muted hint">
@@ -51,6 +55,20 @@
         <!-- 选关菜单：render.js 控制显隐 -->
         <section id="menu" class="menu hidden">
             <h2 class="menu-title">选择关卡</h2>
+
+            <!-- 钱包栏：余额 + 今日签到 + 看广告 -->
+            <div class="wallet-bar">
+                <div class="wallet-balance" title="道具余额跨关卡保留">
+                    <span class="wallet-item" title="撤回"><span class="tool-icon">↶</span><b id="wallet-undo">0</b></span>
+                    <span class="wallet-item" title="洗牌"><span class="tool-icon">🔀</span><b id="wallet-shuffle">0</b></span>
+                    <span class="wallet-item" title="移除"><span class="tool-icon">⤴</span><b id="wallet-remove">0</b></span>
+                </div>
+                <div class="wallet-actions">
+                    <button id="btn-daily"    class="btn btn-primary btn-sm" type="button" title="每天免费领一次">🎁 <span id="btn-daily-text">今日签到</span></button>
+                    <button id="btn-watch-ad" class="btn btn-ghost btn-sm"   type="button" title="看完一条广告 +1 撤回">📺 看广告 +1 撤回</button>
+                </div>
+            </div>
+
             <div id="level-grid" class="level-grid"></div>
         </section>
 
@@ -71,7 +89,7 @@
             <p class="muted tiny">
                 非官方学习项目 ·
                 <a href="https://github.com/moyuyumoyuyumo/sheep-n-sheep" target="_blank" rel="noopener">GitHub</a>
-                · 阶段 1 最小可玩
+                · 阶段 6 道具钱包 / 签到 / 广告 / 后门
             </p>
         </footer>
     </div>

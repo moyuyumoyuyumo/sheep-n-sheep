@@ -17,6 +17,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { networkInterfaces } from 'node:os';
 
 const PORT = 5500;
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)));
@@ -60,10 +61,32 @@ createServer(async (req, res) => {
     res.end(`Not found: ${urlPath}`);
     console.log(`  404  ${urlPath}`);
   }
-}).listen(PORT, () => {
+}).listen(PORT, '0.0.0.0', () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('  ▶ 咩了个咩 · 本地开发服务器');
-  console.log(`  ▶ http://localhost:${PORT}`);
+  console.log(`  ▶ 本机访问     : http://localhost:${PORT}`);
+  for (const ip of getLanIPv4()) {
+    console.log(`  ▶ 同 WiFi 手机 : http://${ip}:${PORT}`);
+  }
   console.log('  ▶ 按 Ctrl+C 停止');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 });
+
+/**
+ * 拿到本机所有 IPv4（排掉 loopback / 虚拟网卡），
+ * 让同 WiFi 下的手机能访问。
+ * 过滤掉常见虚拟网卡名称（VMware / VirtualBox / WSL）避免干扰。
+ */
+function getLanIPv4() {
+  const ips = [];
+  const nets = networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    if (/vEthernet|VMware|VirtualBox|WSL|Loopback/i.test(name)) continue;
+    for (const ni of nets[name] || []) {
+      if (ni.family === 'IPv4' && !ni.internal) {
+        ips.push(ni.address);
+      }
+    }
+  }
+  return ips;
+}

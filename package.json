@@ -7,6 +7,6 @@
   "scripts": {
     "start": "node dev-server.js",
     "dev":   "node dev-server.js",
-    "test":  "node tests/test-board.js && node tests/test-slot-rules.js && node tests/test-tools.js && node tests/test-builders.js"
+    "test":  "node tests/test-board.js && node tests/test-slot-rules.js && node tests/test-tools.js && node tests/test-builders.js && node tests/test-wallet.js && node tests/test-daily.js"
   }
 }

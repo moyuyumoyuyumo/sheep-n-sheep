@@ -20,6 +20,9 @@ import { playClick, playMatch, playWin, playLose, toggleMute, isMuted } from './
 import { getLevelById, getNextLevel } from '../../levels/index.js';
 import { markPassed } from '../progress.js';
 import { useUndo, useShuffle, useRemove } from '../game/tools.js';
+import { spend as walletSpend, getBalance } from '../wallet.js';
+import { canClaimToday, claimToday, DAILY_PACKET } from '../daily.js';
+import { showRewardAd, AD_REWARD } from '../ads.js';
 
 const MATCH_ANIM_MS = 320;
 
@@ -33,7 +36,7 @@ let isAnimating = false;
  * @param {() => void} handlers.rerender - 重画一帧（点牌成功后）
  * @param {() => void} handlers.restart  - 开新局（点重开按钮时）
  */
-export function bindControls(state, { rerender, startLevel, showMenu }) {
+export function bindControls(state, { rerender, startLevel, showMenu, syncToolUses }) {
   // 牌点击：事件委托在 #board 上
   const board = document.getElementById('board');
   if (!board) return;
@@ -97,7 +100,7 @@ export function bindControls(state, { rerender, startLevel, showMenu }) {
     });
   }
 
-  // 道具按钮：三个都走同一个模板（有次数 → 调用 useFn → 微改 state → 重渲）
+  // 道具按钮：验证余额 → 调 useFn 改 state → wallet.spend() 扣财 → 同步快照重渲
   bindToolButton('btn-undo',    'undo',    useUndo);
   bindToolButton('btn-shuffle', 'shuffle', useShuffle);
   bindToolButton('btn-remove',  'remove',  useRemove);
@@ -106,15 +109,75 @@ export function bindControls(state, { rerender, startLevel, showMenu }) {
     document.getElementById(btnId)?.addEventListener('click', () => {
       if (isAnimating) return;
       if (state.status !== 'playing') return;
-      if ((state.toolUses?.[toolKey] ?? 0) <= 0) return;
+      if ((getBalance()[toolKey] ?? 0) <= 0) return;       // 实时查 wallet
       if (useFn(state)) {
-        state.toolUses[toolKey]--;
+        walletSpend(toolKey);                              // 扣 1 个
+        if (typeof syncToolUses === 'function') syncToolUses();
         playClick();
-        if (DEBUG) console.log(`  · 用了 ${toolKey}，剩 ${state.toolUses[toolKey]} 次`);
+        if (DEBUG) console.log(`  · 用了 ${toolKey}，剩 ${getBalance()[toolKey]} 次`);
         rerender();
       }
     });
   }
+
+  // 菜单上的 "今日签到" 按钮
+  document.getElementById('btn-daily')?.addEventListener('click', () => {
+    if (!canClaimToday()) {
+      showFlyMsg('今日已领取，明天再来 ⏰', 'info');
+      return;
+    }
+    claimToday();
+    if (typeof syncToolUses === 'function') syncToolUses();
+    playMatch();
+    showFlyMsg(formatPacket('领到', DAILY_PACKET), 'success');
+    rerender();
+  });
+
+  // 菜单上的 "看广告" 按钮 + 道具栏内的同名按钮
+  const onWatchAd = async (e) => {
+    const btn = e.currentTarget;
+    if (btn.dataset.busy === '1') return;
+    btn.dataset.busy = '1';
+    btn.classList.add('loading');
+    try {
+      const res = await showRewardAd();
+      if (res.rewarded) {
+        if (typeof syncToolUses === 'function') syncToolUses();
+        playMatch();
+        showFlyMsg(formatPacket('广告奖励', AD_REWARD), 'success');
+        rerender();
+      } else {
+        showFlyMsg('广告未完成，未领取奖励', 'info');
+      }
+    } finally {
+      btn.dataset.busy = '0';
+      btn.classList.remove('loading');
+    }
+  };
+  document.getElementById('btn-watch-ad')?.addEventListener('click', onWatchAd);
+  document.getElementById('btn-watch-ad-toolbar')?.addEventListener('click', onWatchAd);
+}
+
+/** 道具礼包 → 人话字符串，例如 "领到 +2撒回 +1洗牌 +1移除"。 */
+function formatPacket(prefix, packet) {
+  const labels = { undo: '撤回', shuffle: '洗牌', remove: '移除' };
+  const parts = [];
+  for (const k of Object.keys(packet)) {
+    if (packet[k] > 0) parts.push(`+${packet[k]} ${labels[k] || k}`);
+  }
+  return `${prefix} ${parts.join(' ')}`;
+}
+
+/** 中心浮一行小提示，1.5s 后消失。 */
+function showFlyMsg(text, kind = 'info') {
+  const old = document.getElementById('fly-msg');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'fly-msg';
+  el.className = `fly-msg fly-msg-${kind}`;
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
 }
 
 /**

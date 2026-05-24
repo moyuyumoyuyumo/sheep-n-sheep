@@ -15,6 +15,8 @@ import { TILE_SIZE, SLOT_CAPACITY } from '../config.js';
 import { isCovered } from '../game/board.js';
 import { allLevels, getNextLevel } from '../../levels/index.js';
 import { getPassedSet, isLevelUnlocked } from '../progress.js';
+import { getBalance } from '../wallet.js';
+import { canClaimToday } from '../daily.js';
 
 const STATUS_LABEL = {
   idle:    '准备中',
@@ -35,11 +37,40 @@ export function render(state) {
   document.querySelector('.game-stage')?.classList.toggle('hidden', state.status === 'menu');
 
   renderMenu(state);
+  renderWalletBar();        // 菜单上的钱包栏（余额 + 签到状态）
   renderBoard(state);
   renderSlot(state);
   renderToolbar(state);
   renderStatus(state);
   renderModal(state);
+}
+
+/**
+ * 菜单顶部钱包栏：同步 3 个数字 + 签到按钮文案。
+ * 不需要依赖 state.toolUses——直接读 wallet，避免快照不同步。
+ */
+function renderWalletBar() {
+  const w = getBalance();
+  const u = document.getElementById('wallet-undo');
+  const s = document.getElementById('wallet-shuffle');
+  const r = document.getElementById('wallet-remove');
+  if (u) u.textContent = w.undo;
+  if (s) s.textContent = w.shuffle;
+  if (r) r.textContent = w.remove;
+
+  const dailyBtn  = document.getElementById('btn-daily');
+  const dailyText = document.getElementById('btn-daily-text');
+  if (dailyBtn && dailyText) {
+    if (canClaimToday()) {
+      dailyBtn.disabled = false;
+      dailyBtn.classList.remove('claimed');
+      dailyText.textContent = '今日签到';
+    } else {
+      dailyBtn.disabled = true;
+      dailyBtn.classList.add('claimed');
+      dailyText.textContent = '已领取';
+    }
+  }
 }
 
 /**
