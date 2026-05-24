@@ -5,6 +5,8 @@
   "type": "module",
   "description": "网页版三消益智小游戏（咩了个咩）",
   "scripts": {
-    "test": "node tests/test-board.js"
+    "start": "node dev-server.js",
+    "dev":   "node dev-server.js",
+    "test":  "node tests/test-board.js && node tests/test-slot-rules.js"
   }
 }
