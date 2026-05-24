@@ -1,0 +1,10 @@
+{
+  "name": "sheep-n-sheep",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "网页版三消益智小游戏（咩了个咩）",
+  "scripts": {
+    "test": "node tests/test-board.js"
+  }
+}
