@@ -3,89 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咩了个咩 · 开发中</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-family: system-ui, -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
-            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fde68a 100%);
-            color: #44403c;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .sheep {
-            font-size: 5rem;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
-            margin: 0.5rem 0;
-            color: #78350f;
-        }
-
-        .subtitle {
-            font-size: 1.125rem;
-            color: #92400e;
-            margin-bottom: 1.5rem;
-        }
-
-        .status {
-            font-size: 1rem;
-            color: #78716c;
-            margin: 0.25rem 0;
-        }
-
-        .badge {
-            margin-top: 2rem;
-            padding: 0.5rem 1.25rem;
-            background: #fbbf24;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #78350f;
-            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
-        }
-
-        footer {
-            position: fixed;
-            bottom: 1rem;
-            font-size: 0.75rem;
-            color: #a8a29e;
-        }
-
-        footer a {
-            color: #92400e;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>咩了个咩 · 阶段 1.1</title>
+    <link rel="stylesheet" href="./styles/base.css">
 </head>
 <body>
-    <div class="sheep">🐑</div>
-    <h1>咩了个咩</h1>
-    <p class="subtitle">网页版三消益智小游戏</p>
-    <p class="status">玩法借鉴《羊了个羊》</p>
-    <p class="status">开发中…</p>
-    <div class="badge">阶段 0 · Hello World</div>
-    <footer>
-        非官方学习项目 ·
-        <a href="https://github.com/moyuyumoyuyumo/sheep-n-sheep" target="_blank" rel="noopener">GitHub</a>
-    </footer>
+    <div id="app">
+        <div class="sheep">🐑</div>
+        <h1>咩了个咩</h1>
+        <p class="muted">网页版三消益智小游戏</p>
+        <p class="muted">玩法借鉴《羊了个羊》</p>
+        <div class="badge">阶段 1.1 · 文件骨架就绪</div>
+        <p class="muted" style="margin-top: 2rem; max-width: 380px; line-height: 1.7;">
+            按 F12 打开浏览器开发者工具 → Console 标签，<br>
+            应该看到「[咩了个咩] 阶段 1.1 骨架已加载」字样。
+        </p>
+        <p class="muted" style="margin-top: 1.5rem; font-size: 0.75rem;">
+            非官方学习项目 ·
+            <a href="https://github.com/moyuyumoyuyumo/sheep-n-sheep" target="_blank" rel="noopener" style="color: var(--accent-d);">GitHub</a>
+        </p>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
 </body>
 </html>

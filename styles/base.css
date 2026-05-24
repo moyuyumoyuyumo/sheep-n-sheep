@@ -1,0 +1,82 @@
+/* styles/base.css
+ * 基础样式：CSS 重置 + 全局变量 + 通用排版。
+ * 游戏专属的样式（牌、槽）放在后续阶段的 board.css / theme.css 里。
+ */
+
+/* ─── 重置 ───────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── 全局变量（调色板）─────────────────────────── */
+:root {
+  --bg-from: #fffbeb;
+  --bg-to:   #fde68a;
+  --fg:      #44403c;
+  --muted:   #78716c;
+  --accent:  #fbbf24;
+  --accent-d:#78350f;
+
+  --tile-size: 60px;
+  --tile-gap:  4px;
+}
+
+/* ─── 全局排版 ───────────────────────────────────── */
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: linear-gradient(135deg, var(--bg-from), var(--bg-to));
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── 入口容器 ───────────────────────────────────── */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin-bottom: 0.5rem;
+  color: var(--accent-d);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* ─── 阶段徽章（开发中标签）─────────────────────── */
+.badge {
+  margin-top: 1.5rem;
+  padding: 0.4rem 1rem;
+  background: var(--accent);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-d);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+/* ─── 浮动小羊（开发阶段占位画面）─────────────── */
+.sheep {
+  font-size: 5rem;
+  animation: sheep-float 3s ease-in-out infinite;
+}
+
+@keyframes sheep-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-15px); }
+}
