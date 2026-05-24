@@ -110,6 +110,42 @@ function renderBoard(state) {
 
     board.appendChild(el);
   }
+
+  // 关键：窄屏自适应。板子比容器宽（如 level-06 14×50=700px > 手机屏）时
+  // 按比例 scale 缩小，避免左侧切边。
+  fitBoardScale(board, maxX, maxY);
+}
+
+/**
+ * 让 board 内容刚好放进父容器宽度。
+ * 实现：先清掉旧 transform → 测父容器可用宽度 → 算 scale → 重设 transform。
+ * 注意：scale 不影响布局尺寸，所以同时修正 board 自身 height 让下方道具栏不被遮。
+ */
+function fitBoardScale(board, maxX, maxY) {
+  const naturalW = maxX * TILE_SIZE;
+  const naturalH = maxY * TILE_SIZE;
+
+  // 父容器（.game-stage）的可用内宽
+  const parent = board.parentElement;
+  if (!parent) return;
+  const parentW = parent.clientWidth - 4;     // 留 2px 安全边
+
+  // 装得下：恢复默认
+  if (naturalW <= parentW) {
+    board.style.transform = '';
+    board.style.transformOrigin = '';
+    board.style.height = naturalH + 'px';
+    board.style.marginLeft = '';
+    return;
+  }
+
+  // 装不下：按比例缩，左对齐 + 通过 margin 把因 scale 留下的右侧空白吃掉
+  const scale = parentW / naturalW;
+  board.style.transform       = `scale(${scale})`;
+  board.style.transformOrigin = 'top left';
+  // 高度按 scale 修正，让下方 slot/toolbar 不会顶上来或留大空白
+  board.style.height          = (naturalH * scale) + 'px';
+  board.style.marginLeft      = '0';
 }
 
 /**

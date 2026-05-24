@@ -1,25 +1,29 @@
 // src/ui/audio.js
-// 用 Web Audio API 编程合成短音效，无需外部音频文件。
+// 用 Web Audio API 编程合成短音效 + 循环 BGM，无需外部音频文件。
 //
 // 设计原则：
 //   1. 零外部资源 — 全部用 oscillator 合成，加载即可用
 //   2. lazy 初始化 — 首次播音时才 new AudioContext()，避免浏览器警告
 //   3. 失败静默 — 浏览器不支持或 ctx 创建失败就当作静音
-//   4. 静音偏好持久化到 localStorage（key: mok-muted）
+//   4. 偏好持久化（key: mok-muted 控制音效, mok-bgm 控制 BGM）
 
-const STORAGE_KEY = 'mok-muted';
+const SFX_KEY = 'mok-muted';      // 音效（点击/三消/胜负）开关
+const BGM_KEY = 'mok-bgm';        // BGM 开关（默认开）
 
 let ctx = null;
-let muted = readMuted();
+let muted   = readKey(SFX_KEY, false);   // 默认有音效
+let bgmOn   = readKey(BGM_KEY, true);    // 默认开 BGM
 
-function readMuted() {
-  try { return localStorage.getItem(STORAGE_KEY) === '1'; }
-  catch { return false; }
+function readKey(k, defaultBool) {
+  try {
+    const v = localStorage.getItem(k);
+    if (v === null) return defaultBool;
+    return v === '1';
+  } catch { return defaultBool; }
 }
 
-function writeMuted(v) {
-  try { localStorage.setItem(STORAGE_KEY, v ? '1' : '0'); }
-  catch {}
+function writeKey(k, v) {
+  try { localStorage.setItem(k, v ? '1' : '0'); } catch {}
 }
 
 function ensureCtx() {
@@ -93,12 +97,91 @@ export function playLose() {
   ]);
 }
 
+// ─── 音效开关 ─────────────────────────────────────
 export function toggleMute() {
   muted = !muted;
-  writeMuted(muted);
+  writeKey(SFX_KEY, muted);
   return muted;
 }
 
 export function isMuted() {
   return muted;
+}
+
+// ─── BGM 循环 ─────────────────────────────────────
+// 简单 C 大调 8 拍循环（参考"羊了个羊"那种 Q 萌轻快感）
+// 每个音 0.4s，整曲 4.2s 一个循环，sine 波 + 低音量 0.04 不抢戏
+const BGM_NOTES = [
+  { freq: 523.25, dur: 0.40 },  // C5
+  { freq: 659.25, dur: 0.40 },  // E5
+  { freq: 783.99, dur: 0.40 },  // G5
+  { freq: 659.25, dur: 0.40 },  // E5
+  { freq: 587.33, dur: 0.40 },  // D5
+  { freq: 698.46, dur: 0.40 },  // F5
+  { freq: 587.33, dur: 0.40 },  // D5
+  { freq: 523.25, dur: 0.80 },  // C5（长尾收）
+  { freq:   0.00, dur: 0.20 },  // 半拍休止
+];
+
+let bgmTimer    = null;
+let bgmActive   = false;     // 当前是否在播（受用户开关 + 是否启动控制）
+
+/**
+ * 调度一个完整 cycle 的所有音符到 audioContext.currentTime 之后；
+ * cycle 结束前用 setTimeout 触发下一轮。
+ */
+function scheduleBgmCycle() {
+  if (!bgmActive) return;
+  const c = ensureCtx();
+  if (!c) return;
+  if (c.state === 'suspended') c.resume();
+
+  let t = c.currentTime + 0.05;
+  let total = 0;
+  for (const n of BGM_NOTES) {
+    if (n.freq > 0) {
+      const osc  = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = n.freq;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.04,    t + 0.02);  // BGM 音量低
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + n.dur - 0.02);
+      osc.connect(gain).connect(c.destination);
+      osc.start(t);
+      osc.stop(t + n.dur);
+    }
+    t     += n.dur;
+    total += n.dur;
+  }
+
+  // 在 cycle 结束前 100ms 触发下一轮，保证连续不断
+  bgmTimer = setTimeout(scheduleBgmCycle, (total - 0.1) * 1000);
+}
+
+/** 开始 BGM 循环。如果用户偏好关 BGM，这个函数静默无效。 */
+export function startBgm() {
+  if (!bgmOn || bgmActive) return;
+  bgmActive = true;
+  scheduleBgmCycle();
+}
+
+/** 停止 BGM。 */
+export function stopBgm() {
+  bgmActive = false;
+  if (bgmTimer) { clearTimeout(bgmTimer); bgmTimer = null; }
+}
+
+/** 切换 BGM 开关。返回新状态（true=开）。 */
+export function toggleBgm() {
+  bgmOn = !bgmOn;
+  writeKey(BGM_KEY, bgmOn);
+  if (bgmOn) startBgm();
+  else       stopBgm();
+  return bgmOn;
+}
+
+/** 当前 BGM 开关偏好。 */
+export function isBgmOn() {
+  return bgmOn;
 }

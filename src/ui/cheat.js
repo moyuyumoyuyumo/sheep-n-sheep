@@ -15,6 +15,8 @@
 //   - 演示：给朋友看游戏时一键解锁所有道具
 
 import { setBalance, getBalance } from '../wallet.js';
+import { markPassed } from '../progress.js';
+import { allLevels }  from '../../levels/index.js';
 
 const KONAMI = [
   'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
@@ -92,10 +94,23 @@ function setupTitleTap(onTrigger) {
 }
 
 function triggerCheat(onTrigger) {
+  // 1. 道具拉满
   setBalance({ undo: 999, shuffle: 999, remove: 999 });
+
+  // 2. 解锁所有关卡（mark 每一关 passed，连带解锁后续关卡）
+  for (const lv of allLevels) {
+    markPassed(lv.id);
+  }
+
+  // 3. 视觉反馈 + 调用方刷新 UI
   showCheatToast();
   if (typeof onTrigger === 'function') onTrigger();
-  console.log('%c[CHEAT] 道具已全部拉满 999', 'color:#fb923c;font-weight:bold;', getBalance());
+
+  console.log(
+    '%c[CHEAT] 道具拉满 999 + 全部 ' + allLevels.length + ' 关解锁',
+    'color:#fb923c;font-weight:bold;',
+    getBalance(),
+  );
 }
 
 /** 触发后右上角浮一行字，2 秒消失。 */
@@ -105,7 +120,7 @@ function showCheatToast() {
 
   const toast = document.createElement('div');
   toast.id = 'cheat-toast';
-  toast.textContent = '🎰 道具拉满！';
+  toast.textContent = '🎰 道具拉满 · 全部关卡解锁！';
   toast.style.cssText = `
     position: fixed; top: 16px; right: 16px; z-index: 9999;
     padding: 10px 18px; border-radius: 999px;

@@ -16,7 +16,8 @@ import { isCovered } from '../game/board.js';
 import { addToSlot, isSlotFull } from '../game/slot.js';
 import { findMatch, isWin, isLose } from '../game/rules.js';
 import { DEBUG } from '../config.js';
-import { playClick, playMatch, playWin, playLose, toggleMute, isMuted } from './audio.js';
+import { playClick, playMatch, playWin, playLose, toggleMute, isMuted,
+         startBgm, toggleBgm, isBgmOn } from './audio.js';
 import { getLevelById, getNextLevel } from '../../levels/index.js';
 import { markPassed } from '../progress.js';
 import { useUndo, useShuffle, useRemove } from '../game/tools.js';
@@ -99,6 +100,27 @@ export function bindControls(state, { rerender, startLevel, showMenu, syncToolUs
       muteBtn.textContent = toggleMute() ? '🔇' : '🔊';
     });
   }
+
+  // BGM 切换：🎵 = 开 / 🎵̸ 灰 = 关
+  const bgmBtn = document.getElementById('btn-bgm');
+  if (bgmBtn) {
+    const refresh = () => {
+      bgmBtn.textContent = isBgmOn() ? '🎵' : '🎵';
+      bgmBtn.classList.toggle('btn-bgm-off', !isBgmOn());
+      bgmBtn.title = isBgmOn() ? '关闭背景音乐' : '打开背景音乐';
+    };
+    refresh();
+    bgmBtn.addEventListener('click', () => {
+      toggleBgm();
+      refresh();
+    });
+  }
+
+  // 浏览器 autoplay 限制：必须等用户首次手势后才能 startBgm
+  // 用 capture 阶段 + once 监听 document 上的第一次 pointerdown
+  document.addEventListener('pointerdown', () => {
+    if (isBgmOn()) startBgm();
+  }, { once: true, capture: true });
 
   // 道具按钮：验证余额 → 调 useFn 改 state → wallet.spend() 扣财 → 同步快照重渲
   bindToolButton('btn-undo',    'undo',    useUndo);
