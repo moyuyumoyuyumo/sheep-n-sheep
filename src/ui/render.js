@@ -21,6 +21,9 @@ const STATUS_LABEL = {
   lost:    '💀 失败',
 };
 
+// 记上一帧 slot 里哪些 tile id，下一帧比对识别"新出现"的 cell 加动画
+let prevSlotIds = new Set();
+
 /**
  * 把 state 完整渲染到 DOM。
  * @param {object} state - 全局游戏状态
@@ -85,6 +88,13 @@ function renderSlot(state) {
     const cell = document.createElement('div');
     cell.className   = 'slot-cell';
     cell.textContent = tile.symbol;
+    cell.dataset.tileId = tile.id;
+
+    // 上一帧没这张 id → 新出现 → pop 入场动画
+    if (!prevSlotIds.has(tile.id)) cell.classList.add('just-added');
+    // controls.js 给要消的牌打了 _matching → 消失动画
+    if (tile._matching)            cell.classList.add('matching');
+
     slotEl.appendChild(cell);
   }
 
@@ -94,6 +104,12 @@ function renderSlot(state) {
     empty.className = 'slot-cell empty';
     slotEl.appendChild(empty);
   }
+
+  // 槽接近满时呼吸红光（≥ SLOT_CAPACITY - 2）
+  slotEl.classList.toggle('warning', state.slot.length >= SLOT_CAPACITY - 2);
+
+  // 记下这一帧的 id，下一帧比对用
+  prevSlotIds = new Set(state.slot.map(t => t.id));
 }
 
 /**
@@ -131,4 +147,11 @@ function renderModal(state) {
   } else {
     overlay.classList.add('hidden');
   }
+}
+
+/**
+ * 重开新局时调用：清空"上一帧"缓存，让新局的 slot 也能 pop 入场。
+ */
+export function resetRenderCache() {
+  prevSlotIds = new Set();
 }

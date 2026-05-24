@@ -7,8 +7,8 @@
 
 ## 当前阶段
 
-**阶段 1 · 最小可玩原型 完成（本地打 tag v0.1）**
-等浏览器手动验证 → 网络恢复后 `git push` → 阶段 2 视觉打磨。
+**阶段 2 · 视觉打磨 完成（本地打 tag v0.2）**
+等浏览器手动验证 → 网络恢复后 `git push --tags` → 阶段 3 关卡系统。
 
 ## 项目关键信息
 
@@ -41,18 +41,31 @@
 - [x] 1.1b 本地 `dev-server.js`（30 行零依赖 Node 静态服务）替代 Live Server
 - [x] 1.9 progress 更新 + commit + tag `v0.1`
 
+### 阶段 2 · 视觉打磨
+- [x] 2.1 入槽 pop 动画 + 三消消失动画（`isAnimating` 锁输入，320ms 延迟消除）
+- [x] 2.2 点 covered 牌 → wiggle；槽接近满≥ 5/7 → 红色呼吸预警
+- [x] 2.3 4 种音效（click / match / win / lose）— Web Audio API 纯代码生成
+- [x] 2.3b 静音切换按钮 🔊/🔇，偏好存 `localStorage[mok-muted]`
+- [x] 2.4 卡面渐变 + 多层阴影（外阴影 + 内高光 + 底部深色边）
+- [x] 2.5 移动适配：`@media (max-width: 480px)` + `@media (hover: hover)` 避免触屏粘 hover
+- [x] 2.6 progress 更新 + commit + tag `v0.2`
+
 ## 进行中 / 待办
 
-- [ ] 0.9 网络恢复后 `git push` + 在 GitHub Settings 开 Pages
-- [ ] 阶段 1 浏览器手动验证（1.6 + 1.8b 流程没人工跑过）
-- [ ] 阶段 2 视觉打磨：动画、音效、更好看的卡面
+- [ ] 0.9 网络恢复后 `git push --tags` + 在 GitHub Settings 开 Pages
+- [ ] 阶段 1 + 2 浏览器手动验证（点击 / 三消 / 弹窗 / 重开 / 动画 / 音效）
+- [ ] 阶段 3 关卡系统：多关多层 / 选关界面 / 进度持久化
+- [ ] 阶段 4 道具系统：撤回 / 洗牌 / 移除
 
 ## 笔记 / 待澄清的问题
 
 - `level-01` 是 3×3 = 9 张牌的极简关卡，理论上必赢，验证三消主流程足够
-- dev-server 早期 bug：`fileURLToPath` 在 Windows 上路径末尾自带 `\`，需用 `path.resolve` 规范化
+- dev-server Windows 路径 bug：`fileURLToPath` 末尾自带 `\`，用 `path.resolve` 规范化
 - `addToSlot` 设计是"同 symbol 自动挤一起"，`findMatch` 只查连续 3 张
-- tile id 用模块级计数器分配，`resetState()` 会同时调 `resetTileIds()` 防 id 累加
+- tile id 用模块级计数器，`resetState()` 会同时调 `resetTileIds()` 防累加
+- 2.1 三消动画用临时标记 `tile._matching`：render 看到就加 .matching class，controls.js setTimeout 320ms 后才真 filter 掉
+- 2.1 `prevSlotIds` 缓存上一帧 slot 里哪些 id，用于识别"新出现"的 cell 给 .just-added；startGame 清空它
+- 2.3 audio.js 用 `OscillatorNode`，首次手势后 lazy 创建的 AudioContext，避免浏览器警告
 
 ## 历史会话
 
@@ -60,3 +73,4 @@
 |---|---|---|
 | 2026-05-23 | 项目启动 + 四份文档 + 阶段 0 全部步骤 | 一气呵成 |
 | 2026-05-24 | 阶段 1 全程：数据层 → UI → 弹窗，本地 tag v0.1 | 1.6/1.8b 未手动验证 |
+| 2026-05-24 | 阶段 2 视觉打磨：动画 / 反馈 / 音效 / 美化 / 移动适配，tag v0.2 | 未人工验证 |

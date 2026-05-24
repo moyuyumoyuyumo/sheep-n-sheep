@@ -3,21 +3,25 @@
 //
 // 设计原则：
 //   1. 改 state 的代码只能从这里出发；render 只读不改
-//   2. 用事件委托（一次性挂在 #board 上）：
-//        - 永久生效，render 反复重建 DOM 也不会丢失监听
-//        - 比给每张 .tile 单独绑节省内存
-//   3. 每次成功操作后调 onChange()，通常是 () => render(state)
+//   2. 事件委托一次性挂在 #board，render 反复重建 DOM 不丢监听
+//   3. 三消有动画延迟（320ms）：先渲染"消失中"，再真消除 + 判胜负
+//   4. 动画期间锁住输入，避免乱点导致状态错乱
 //
-// 点击牌的处理流程：
-//   找到 tile → 校验（playing? 没被压? 槽没满?）
-//   → tile.removed = true → addToSlot
-//   → findMatch 有就消除
-//   → 判定胜负 → onChange()
+// 点击牌流程：
+//   tile → 校验 → tile.removed + addToSlot → 渲染
+//   匹配？  → 标 _matching → 渲染 → setTimeout → 真消 → 判胜负 → 渲染
+//   不匹配？→ 判 isLose → 渲染
 
 import { isCovered } from '../game/board.js';
 import { addToSlot, isSlotFull } from '../game/slot.js';
 import { findMatch, isWin, isLose } from '../game/rules.js';
 import { DEBUG } from '../config.js';
+import { playClick, playMatch, playWin, playLose, toggleMute, isMuted } from './audio.js';
+
+const MATCH_ANIM_MS = 320;
+
+// 三消动画期间锁住输入，避免乱点导致状态错乱
+let isAnimating = false;
 
 /**
  * 绑定所有交互事件。整个生命周期只调一次。
@@ -32,71 +36,103 @@ export function bindControls(state, { rerender, restart }) {
   if (!board) return;
 
   board.addEventListener('click', (e) => {
-    // 事件委托：点的可能是 tile 内部任意位置，向上找 .tile
+    if (isAnimating) return;                       // 动画期间忽略点击
     const tileEl = e.target.closest('.tile');
     if (!tileEl) return;
+
+    // 点了被压住的牌 → 摇晃反馈，不入槽
+    if (tileEl.classList.contains('covered')) {
+      tileEl.classList.add('shake');
+      setTimeout(() => tileEl.classList.remove('shake'), 320);
+      return;
+    }
 
     const tileId = Number(tileEl.dataset.tileId);
     if (!Number.isFinite(tileId)) return;
 
-    const changed = handleTileClick(state, tileId);
-    if (changed) rerender();
+    handleTileClick(state, tileId, rerender);
   });
 
-  // 重开按钮：顶部、胜负弹窗里的都走同一个 restart
-  document.getElementById('btn-restart')?.addEventListener('click', restart);
-  document.getElementById('btn-play-again')?.addEventListener('click', restart);
+  // 重开：包一层强制清锁，让重开能打断动画
+  const safeRestart = () => {
+    isAnimating = false;
+    restart();
+  };
+  document.getElementById('btn-restart')?.addEventListener('click', safeRestart);
+  document.getElementById('btn-play-again')?.addEventListener('click', safeRestart);
+
+  // 静音切换：图标随状态变，偏好持久化在 audio.js 里
+  const muteBtn = document.getElementById('btn-mute');
+  if (muteBtn) {
+    muteBtn.textContent = isMuted() ? '🔇' : '🔊';
+    muteBtn.addEventListener('click', () => {
+      muteBtn.textContent = toggleMute() ? '🔇' : '🔊';
+    });
+  }
 }
 
 /**
- * 处理点击一张牌的完整流程。
- * @returns {boolean} 是否对 state 产生了修改（true 才重画）
+ * 处理一次点击：校验 → 改 state → 渲染。
+ * 触发三消时多走延迟流程：先渲染"消失动画"，等动画完再真消除 + 判胜负。
  */
-function handleTileClick(state, tileId) {
-  // 游戏没在进行 → 忽略
-  if (state.status !== 'playing') return false;
+function handleTileClick(state, tileId, rerender) {
+  if (state.status !== 'playing') return;
 
   const tile = state.tiles.find(t => t.id === tileId);
-  if (!tile || tile.removed) return false;
+  if (!tile || tile.removed) return;
 
-  // 被压住的牌不能点
   if (isCovered(tile, state.tiles)) {
-    if (DEBUG) console.log(`  · 牌 #${tileId} ${tile.symbol} 被压住，无法点击`);
-    return false;
+    if (DEBUG) console.log(`  · 牌 #${tileId} ${tile.symbol} 被压住`);
+    return;
   }
-
-  // 槽满了不能加（防御性检查；理论上下面 isLose 会接管）
   if (isSlotFull(state.slot)) {
     if (DEBUG) console.log('  · 槽已满，无法再放牌');
-    return false;
+    return;
   }
 
-  // ─── 修改 state ─────────────────────────────────
+  // 改 state：牌进槽
   tile.removed = true;
   state.slot   = addToSlot(state.slot, tile);
+  playClick();
 
   if (DEBUG) {
-    const slotStr = state.slot.map(t => t.symbol).join(' ');
-    console.log(`  · 入槽 #${tileId} ${tile.symbol}  →  [${slotStr}]`);
+    console.log(`  · 入槽 #${tileId} ${tile.symbol}  →  [${state.slot.map(t => t.symbol).join(' ')}]`);
   }
 
-  // 三消：找连续 3 张同 symbol 就消掉
   const matchIdxs = findMatch(state.slot);
   if (matchIdxs) {
-    const matched = matchIdxs.map(i => state.slot[i].symbol).join('');
+    // 标记要消的牌 _matching → render 加 .matching class → 触发缩放消失动画
     const set = new Set(matchIdxs);
-    state.slot = state.slot.filter((_, i) => !set.has(i));
-    if (DEBUG) console.log(`  · 三消 ✨ ${matched}  →  剩 ${state.slot.length} 张`);
-  }
+    state.slot.forEach((t, i) => { if (set.has(i)) t._matching = true; });
+    rerender();                                  // 第一帧：消失动画进行中
+    playMatch();
 
-  // 判定胜负：先胜利、后失败
-  if (isWin(state.tiles)) {
-    state.status = 'won';
-    if (DEBUG) console.log('%c🎉 胜利！全部牌已消除', 'color:#16a34a;font-weight:bold;');
-  } else if (isLose(state.slot)) {
-    state.status = 'lost';
-    if (DEBUG) console.log('%c💀 失败：槽满且无可消', 'color:#dc2626;font-weight:bold;');
-  }
+    // 等动画播完再真消除 + 判胜负
+    isAnimating = true;
+    setTimeout(() => {
+      state.slot = state.slot.filter(t => !t._matching);
+      if (DEBUG) console.log(`  · 三消 ✨ 剩 ${state.slot.length} 张`);
 
-  return true;
+      if (isWin(state.tiles)) {
+        state.status = 'won';
+        playWin();
+        if (DEBUG) console.log('%c🎉 胜利！', 'color:#16a34a;font-weight:bold;');
+      } else if (isLose(state.slot)) {
+        state.status = 'lost';
+        playLose();
+        if (DEBUG) console.log('%c💀 失败', 'color:#dc2626;font-weight:bold;');
+      }
+
+      isAnimating = false;
+      rerender();                                // 第二帧：消失后 + 可能的弹窗
+    }, MATCH_ANIM_MS);
+  } else {
+    // 没匹配：不会胜利，只可能因槽满失败
+    if (isLose(state.slot)) {
+      state.status = 'lost';
+      playLose();
+      if (DEBUG) console.log('%c💀 失败：槽满凑不齐', 'color:#dc2626;font-weight:bold;');
+    }
+    rerender();
+  }
 }

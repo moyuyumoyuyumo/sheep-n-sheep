@@ -6,13 +6,14 @@ import { SLOT_CAPACITY, MATCH_COUNT, DEBUG } from './config.js';
 import { level01 } from '../levels/level-01.js';
 import { state, resetState } from './state.js';
 import { buildBoard, isCovered } from './game/board.js';
-import { render } from './ui/render.js';
+import { render, resetRenderCache } from './ui/render.js';
 import { bindControls } from './ui/controls.js';
 
 // ─── 启动 / 重开 ─────────────────────────────────────
 // 一个函数管"开局"：清 state、摆牌、设状态、重画。
 // 首次启动 和 用户点"再来一局" 都走这里。
 function startGame() {
+  resetRenderCache();
   resetState();
   state.tiles   = buildBoard(level01);
   state.levelId = level01.id;
