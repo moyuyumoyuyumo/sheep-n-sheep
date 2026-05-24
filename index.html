@@ -3,24 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>咩了个咩 · 阶段 1.1</title>
+    <title>咩了个咩</title>
     <link rel="stylesheet" href="./styles/base.css">
 </head>
 <body>
     <div id="app">
-        <div class="sheep">🐑</div>
-        <h1>咩了个咩</h1>
-        <p class="muted">网页版三消益智小游戏</p>
-        <p class="muted">玩法借鉴《羊了个羊》</p>
-        <div class="badge">阶段 1.1 · 文件骨架就绪</div>
-        <p class="muted" style="margin-top: 2rem; max-width: 380px; line-height: 1.7;">
-            按 F12 打开浏览器开发者工具 → Console 标签，<br>
-            应该看到「[咩了个咩] 阶段 1.1 骨架已加载」字样。
-        </p>
-        <p class="muted" style="margin-top: 1.5rem; font-size: 0.75rem;">
-            非官方学习项目 ·
-            <a href="https://github.com/moyuyumoyuyumo/sheep-n-sheep" target="_blank" rel="noopener" style="color: var(--accent-d);">GitHub</a>
-        </p>
+        <header class="game-header">
+            <h1>咩了个咩</h1>
+            <span id="status-badge" class="status-badge" data-status="idle">准备中</span>
+            <button id="btn-restart" class="btn btn-ghost" type="button" title="重新开始">↻ 重开</button>
+        </header>
+
+        <main class="game-stage">
+            <!-- 牌堆容器：render.js 会在这里 absolute 摆牌 -->
+            <div id="board" class="board"></div>
+
+            <!-- 底部槽：7 个格子，render.js 填入 -->
+            <div id="slot" class="slot"></div>
+
+            <p class="muted hint">
+                白色清晰的牌可以点（上层）<br>
+                灰色的被压住，要先把上面的清掉<br>
+                <small>凑齐 3 张同 symbol 自动消除</small>
+            </p>
+        </main>
+
+        <!-- 胜负弹窗：游戏结束时由 render.js 控制显示 -->
+        <div id="modal-overlay" class="modal-overlay hidden" aria-hidden="true">
+            <div class="modal-card" role="dialog" aria-labelledby="modal-title">
+                <div id="modal-icon" class="modal-icon">🎉</div>
+                <h2 id="modal-title" class="modal-title">胜利！</h2>
+                <p id="modal-subtitle" class="modal-subtitle">挑战成功</p>
+                <button id="btn-play-again" class="btn btn-primary" type="button">再来一局</button>
+            </div>
+        </div>
+
+        <footer class="game-footer">
+            <p class="muted tiny">
+                非官方学习项目 ·
+                <a href="https://github.com/moyuyumoyuyumo/sheep-n-sheep" target="_blank" rel="noopener">GitHub</a>
+                · 阶段 1 最小可玩
+            </p>
+        </footer>
     </div>
 
     <script type="module" src="./src/main.js"></script>
