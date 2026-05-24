@@ -359,6 +359,100 @@ h1 {
   50%      { box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.8), 0 2px 14px rgba(248, 113, 113, 0.4); }
 }
 
+/* ─── 通用工具类 ──────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* ─── 选关菜单 ─────────────────────────────────────── */
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.menu-title {
+  font-size: 1.6rem;
+  color: var(--accent-d);
+  margin: 0;
+}
+
+.level-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.level-card {
+  width: 220px;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #ffffff, #fef3c7);
+  border: 1px solid rgba(252, 211, 77, 0.6);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
+  user-select: none;
+}
+
+.level-card:hover:not(.locked) {
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.level-card.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+.level-card-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-d);
+  margin-bottom: 0.3rem;
+}
+
+.level-card-desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.6rem;
+  line-height: 1.5;
+}
+
+.level-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.level-card-difficulty {
+  letter-spacing: 1px;
+  color: #d97706;
+}
+
+.level-card-status { font-weight: 600; }
+.level-card.passed .level-card-status { color: #16a34a; }
+.level-card.locked .level-card-status { color: var(--muted); }
+
+/* ─── 弹窗按钮组 ──────────────────────────────────── */
+.modal-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 /* ─── 移动端适配 ──────────────────── */
 @media (max-width: 480px) {
   :root { --tile-size: 50px; }

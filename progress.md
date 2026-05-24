@@ -7,8 +7,8 @@
 
 ## 当前阶段
 
-**阶段 2 · 视觉打磨 完成（本地打 tag v0.2）**
-等浏览器手动验证 → 网络恢复后 `git push --tags` → 阶段 3 关卡系统。
+**阶段 3 · 关卡系统 完成（本地打 tag v0.3）**
+等浏览器手动验证 → 网络恢复后 `git push --tags` → 阶段 4 道具系统。
 
 ## 项目关键信息
 
@@ -50,11 +50,18 @@
 - [x] 2.5 移动适配：`@media (max-width: 480px)` + `@media (hover: hover)` 避免触屏粘 hover
 - [x] 2.6 progress 更新 + commit + tag `v0.2`
 
+### 阶段 3 · 关卡系统
+- [x] 3.1 关卡数据加 `description` / `difficulty` 字段；new `levels/index.js` 注册中心（`allLevels` / `getLevelById` / `getNextLevel`）
+- [x] 3.2 新关卡：level-02（18 张 6 symbol 2 层）、level-03（27 张 9 symbol 3 层）
+- [x] 3.3 选关菜单：status `'menu'` 加入状态机，关卡卡片 + 难度星级 + 状态标签
+- [x] 3.4 进度持久化 `src/progress.js`：localStorage `mok-progress` 存 `passedLevels` + `lastPlayedId`；前一关未过 → 后面关 .locked
+- [x] 3.5 胜负弹窗双按钮（`dataset.action='next'/'menu'/'replay'`）；won 不同文案（下一关 vs 全通关）
+- [x] 3.6 progress 更新 + commit + tag `v0.3`
+
 ## 进行中 / 待办
 
 - [ ] 0.9 网络恢复后 `git push --tags` + 在 GitHub Settings 开 Pages
-- [ ] 阶段 1 + 2 浏览器手动验证（点击 / 三消 / 弹窗 / 重开 / 动画 / 音效）
-- [ ] 阶段 3 关卡系统：多关多层 / 选关界面 / 进度持久化
+- [ ] 阶段 1–3 浏览器手动验证（点击 / 三消 / 弹窗 / 重开 / 动画 / 音效 / 选关 / 进度）
 - [ ] 阶段 4 道具系统：撤回 / 洗牌 / 移除
 
 ## 笔记 / 待澄清的问题
@@ -66,6 +73,10 @@
 - 2.1 三消动画用临时标记 `tile._matching`：render 看到就加 .matching class，controls.js setTimeout 320ms 后才真 filter 掉
 - 2.1 `prevSlotIds` 缓存上一帧 slot 里哪些 id，用于识别"新出现"的 cell 给 .just-added；startGame 清空它
 - 2.3 audio.js 用 `OscillatorNode`，首次手势后 lazy 创建的 AudioContext，避免浏览器警告
+- 3.1 `levels/index.js` 是中央注册表，加新关卡只要 import + push 这里即生效
+- 3.4 `progress.js` 所有读写都 `try/catch` 静默失败（隐私模式 / 配额满不抛）
+- 3.5 弹窗按钮用 `dataset.action`，render.js 负责设置，controls.js 委托事件按 action 分发
+- 3.5 won 状态会同时调 `markPassed(levelId)` 创建下次进入菜单时下一关的解锁状态
 
 ## 历史会话
 
@@ -74,3 +85,4 @@
 | 2026-05-23 | 项目启动 + 四份文档 + 阶段 0 全部步骤 | 一气呵成 |
 | 2026-05-24 | 阶段 1 全程：数据层 → UI → 弹窗，本地 tag v0.1 | 1.6/1.8b 未手动验证 |
 | 2026-05-24 | 阶段 2 视觉打磨：动画 / 反馈 / 音效 / 美化 / 移动适配，tag v0.2 | 未人工验证 |
+| 2026-05-24 | 阶段 3 关卡系统：多关多层 / 选关界面 / localStorage 进度，tag v0.3 | 未人工验证 |

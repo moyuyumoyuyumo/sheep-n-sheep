@@ -25,7 +25,9 @@
  */
 export const level01 = {
   id: 'level-01',
-  name: '热身关 · 9 张',
+  name: '热身关',
+  description: '9 张牌 · 3 种动物 · 2 层金字塔',
+  difficulty: 1,
   symbols: ['🐑', '🐱', '🐶'],
 
   tiles: [

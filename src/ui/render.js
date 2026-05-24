@@ -13,6 +13,8 @@
 
 import { TILE_SIZE, SLOT_CAPACITY } from '../config.js';
 import { isCovered } from '../game/board.js';
+import { allLevels, getNextLevel } from '../../levels/index.js';
+import { getPassedSet, isLevelUnlocked } from '../progress.js';
 
 const STATUS_LABEL = {
   idle:    '准备中',
@@ -29,6 +31,10 @@ let prevSlotIds = new Set();
  * @param {object} state - 全局游戏状态
  */
 export function render(state) {
+  // 选关菜单 ↔ 游戏舞台 互斥显示
+  document.querySelector('.game-stage')?.classList.toggle('hidden', state.status === 'menu');
+
+  renderMenu(state);
   renderBoard(state);
   renderSlot(state);
   renderStatus(state);
@@ -127,25 +133,44 @@ function renderStatus(state) {
  * 渲染胜负弹窗。只在 status 为 won / lost 时显示。
  */
 function renderModal(state) {
-  const overlay  = document.getElementById('modal-overlay');
+  const overlay = document.getElementById('modal-overlay');
   if (!overlay) return;
 
-  const icon     = document.getElementById('modal-icon');
-  const title    = document.getElementById('modal-title');
-  const subtitle = document.getElementById('modal-subtitle');
+  if (state.status !== 'won' && state.status !== 'lost') {
+    overlay.classList.add('hidden');
+    return;
+  }
+  overlay.classList.remove('hidden');
+
+  const icon      = document.getElementById('modal-icon');
+  const title     = document.getElementById('modal-title');
+  const subtitle  = document.getElementById('modal-subtitle');
+  const primary   = document.getElementById('btn-modal-primary');
+  const secondary = document.getElementById('btn-modal-secondary');
 
   if (state.status === 'won') {
-    overlay.classList.remove('hidden');
-    icon.textContent     = '🎉';
-    title.textContent    = '胜利！';
-    subtitle.textContent = '所有牌都被你消光了';
-  } else if (state.status === 'lost') {
-    overlay.classList.remove('hidden');
-    icon.textContent     = '💀';
-    title.textContent    = '失败';
-    subtitle.textContent = '槽满了又凑不齐三张';
+    icon.textContent  = '🎉';
+    title.textContent = '通关！';
+    const next = getNextLevel(state.levelId);
+    if (next) {
+      subtitle.textContent   = `下一关：${next.name}`;
+      primary.textContent    = '下一关 →';
+      primary.dataset.action = 'next';
+    } else {
+      subtitle.textContent   = '🎊 已通过全部关卡！';
+      primary.textContent    = '回到选关';
+      primary.dataset.action = 'menu';
+    }
+    secondary.textContent    = '再来一次';
+    secondary.dataset.action = 'replay';
   } else {
-    overlay.classList.add('hidden');
+    icon.textContent         = '💀';
+    title.textContent        = '失败';
+    subtitle.textContent     = '槽满了又凑不齐三张';
+    primary.textContent      = '再来一次';
+    primary.dataset.action   = 'replay';
+    secondary.textContent    = '回到选关';
+    secondary.dataset.action = 'menu';
   }
 }
 
@@ -154,4 +179,49 @@ function renderModal(state) {
  */
 export function resetRenderCache() {
   prevSlotIds = new Set();
+}
+
+/**
+ * 渲染选关菜单。仅在 status === 'menu' 时可见。
+ */
+function renderMenu(state) {
+  const menuEl = document.getElementById('menu');
+  if (!menuEl) return;
+
+  if (state.status !== 'menu') {
+    menuEl.classList.add('hidden');
+    return;
+  }
+  menuEl.classList.remove('hidden');
+
+  const grid = document.getElementById('level-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const passed = getPassedSet();
+  const allIds = allLevels.map(l => l.id);
+
+  for (const level of allLevels) {
+    const passedThis = passed.has(level.id);
+    const unlocked   = isLevelUnlocked(level.id, allIds);
+
+    const card = document.createElement('div');
+    card.className = 'level-card';
+    card.dataset.levelId = level.id;
+    if (passedThis) card.classList.add('passed');
+    if (!unlocked)  card.classList.add('locked');
+
+    const stars  = '★'.repeat(level.difficulty) + '☆'.repeat(Math.max(0, 5 - level.difficulty));
+    const status = !unlocked ? '🔒 未解锁' : (passedThis ? '✓ 已通关' : '待挑战');
+
+    card.innerHTML = `
+      <div class="level-card-name">${level.name}</div>
+      <div class="level-card-desc">${level.description}</div>
+      <div class="level-card-meta">
+        <span class="level-card-difficulty" title="难度 ${level.difficulty}/5">${stars}</span>
+        <span class="level-card-status">${status}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
 }

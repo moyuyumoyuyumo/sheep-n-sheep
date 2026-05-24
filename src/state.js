@@ -5,7 +5,7 @@
 // 字段约定：
 //   tiles    Array<Tile>            所有牌（不管消没消、压没压）
 //   slot     Array<Tile>            底部槽（长度 ≤ SLOT_CAPACITY）
-//   status   'idle' | 'playing' | 'won' | 'lost'   当前阶段
+//   status   'idle' | 'menu' | 'playing' | 'won' | 'lost'   当前阶段
 //   levelId  string | null          当前关卡 id
 
 import { resetTileIds } from './game/tile.js';

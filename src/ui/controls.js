@@ -17,6 +17,8 @@ import { addToSlot, isSlotFull } from '../game/slot.js';
 import { findMatch, isWin, isLose } from '../game/rules.js';
 import { DEBUG } from '../config.js';
 import { playClick, playMatch, playWin, playLose, toggleMute, isMuted } from './audio.js';
+import { getLevelById, getNextLevel } from '../../levels/index.js';
+import { markPassed } from '../progress.js';
 
 const MATCH_ANIM_MS = 320;
 
@@ -30,7 +32,7 @@ let isAnimating = false;
  * @param {() => void} handlers.rerender - 重画一帧（点牌成功后）
  * @param {() => void} handlers.restart  - 开新局（点重开按钮时）
  */
-export function bindControls(state, { rerender, restart }) {
+export function bindControls(state, { rerender, startLevel, showMenu }) {
   // 牌点击：事件委托在 #board 上
   const board = document.getElementById('board');
   if (!board) return;
@@ -53,13 +55,37 @@ export function bindControls(state, { rerender, restart }) {
     handleTileClick(state, tileId, rerender);
   });
 
-  // 重开：包一层强制清锁，让重开能打断动画
-  const safeRestart = () => {
+  // 顶部"返回选关"按钮
+  document.getElementById('btn-back-to-menu')?.addEventListener('click', () => {
     isAnimating = false;
-    restart();
-  };
-  document.getElementById('btn-restart')?.addEventListener('click', safeRestart);
-  document.getElementById('btn-play-again')?.addEventListener('click', safeRestart);
+    showMenu();
+  });
+
+  // 选关卡片点击（事件委托在 #level-grid 上）
+  document.getElementById('level-grid')?.addEventListener('click', (e) => {
+    const card = e.target.closest('.level-card');
+    if (!card) return;
+    if (card.classList.contains('locked')) return;
+    const level = getLevelById(card.dataset.levelId);
+    if (level) startLevel(level);
+  });
+
+  // 弹窗按钮（事件委托在 .modal-actions）：按 dataset.action 分发
+  document.querySelector('.modal-actions')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    isAnimating = false;
+    const action = btn.dataset.action;
+    if (action === 'next') {
+      const next = getNextLevel(state.levelId);
+      if (next) startLevel(next);
+    } else if (action === 'menu') {
+      showMenu();
+    } else if (action === 'replay') {
+      const cur = getLevelById(state.levelId);
+      if (cur) startLevel(cur);
+    }
+  });
 
   // 静音切换：图标随状态变，偏好持久化在 audio.js 里
   const muteBtn = document.getElementById('btn-mute');
@@ -115,8 +141,9 @@ function handleTileClick(state, tileId, rerender) {
 
       if (isWin(state.tiles)) {
         state.status = 'won';
+        markPassed(state.levelId);
         playWin();
-        if (DEBUG) console.log('%c🎉 胜利！', 'color:#16a34a;font-weight:bold;');
+        if (DEBUG) console.log(`%c🎉 通关 ${state.levelId}`, 'color:#16a34a;font-weight:bold;');
       } else if (isLose(state.slot)) {
         state.status = 'lost';
         playLose();

@@ -12,7 +12,7 @@
             <h1>咩了个咩</h1>
             <span id="status-badge" class="status-badge" data-status="idle">准备中</span>
             <button id="btn-mute"    class="btn btn-ghost" type="button" title="开关音效">🔊</button>
-            <button id="btn-restart" class="btn btn-ghost" type="button" title="重新开始">↻ 重开</button>
+            <button id="btn-back-to-menu" class="btn btn-ghost" type="button" title="返回选关">← 选关</button>
         </header>
 
         <main class="game-stage">
@@ -29,13 +29,22 @@
             </p>
         </main>
 
-        <!-- 胜负弹窗：游戏结束时由 render.js 控制显示 -->
+        <!-- 选关菜单：render.js 控制显隐 -->
+        <section id="menu" class="menu hidden">
+            <h2 class="menu-title">选择关卡</h2>
+            <div id="level-grid" class="level-grid"></div>
+        </section>
+
+        <!-- 胜负弹窗：游戏结束时由 render.js 控制显示 + 设置按钮 -->
         <div id="modal-overlay" class="modal-overlay hidden" aria-hidden="true">
             <div class="modal-card" role="dialog" aria-labelledby="modal-title">
                 <div id="modal-icon" class="modal-icon">🎉</div>
                 <h2 id="modal-title" class="modal-title">胜利！</h2>
                 <p id="modal-subtitle" class="modal-subtitle">挑战成功</p>
-                <button id="btn-play-again" class="btn btn-primary" type="button">再来一局</button>
+                <div class="modal-actions">
+                    <button id="btn-modal-primary"   class="btn btn-primary" type="button">下一关</button>
+                    <button id="btn-modal-secondary" class="btn btn-ghost"   type="button">再来一次</button>
+                </div>
             </div>
         </div>
 
