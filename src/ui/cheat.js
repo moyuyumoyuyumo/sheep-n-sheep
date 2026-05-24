@@ -22,6 +22,10 @@ const KONAMI = [
   'b', 'a',
 ];
 
+/** 连点标题触发参数：2 秒内连点 7 次。 */
+const TITLE_TAP_COUNT  = 7;
+const TITLE_TAP_WINDOW = 2000;
+
 /**
  * 绑定后门。整个生命周期调一次即可。
  * @param {() => void} onTrigger - 触发后回调（UI 层用来同步 state.toolUses + 重渲）
@@ -43,8 +47,48 @@ export function setupCheat(onTrigger) {
     }
   });
 
-  // 控制台兜底入口：手机用户 / 不想敲 Konami 的用 window.cheat()
+  // 手机版触发：2 秒内连点页面标题 "咩了个咩" 7 次
+  // 不会误触：正常玩家不会去连点 H1 标题
+  setupTitleTap(onTrigger);
+
+  // 控制台兜底入口：window.cheat() 直接触发
   window.cheat = () => triggerCheat(onTrigger);
+}
+
+/** 监听 .game-header h1 上的连击（鼠标 + 触摸都算）。 */
+function setupTitleTap(onTrigger) {
+  const title = document.querySelector('.game-header h1');
+  if (!title) return;
+
+  // 让标题看起来"可点"，但不影响布局
+  title.style.cursor = 'pointer';
+  title.style.userSelect = 'none';
+
+  let taps = 0;
+  let firstAt = 0;
+
+  // 用 pointerdown 兼容鼠标 + 触摸（手机点击也会派发）
+  const onTap = () => {
+    const now = Date.now();
+    if (now - firstAt > TITLE_TAP_WINDOW) {
+      // 超过窗口期，重新开始计数
+      taps = 0;
+      firstAt = now;
+    }
+    taps++;
+    // 中间给点视觉反馈：连点 4 次以上时让标题闪一下
+    if (taps >= 4 && taps < TITLE_TAP_COUNT) {
+      title.animate(
+        [{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }],
+        { duration: 150 }
+      );
+    }
+    if (taps >= TITLE_TAP_COUNT) {
+      taps = 0;
+      triggerCheat(onTrigger);
+    }
+  };
+  title.addEventListener('pointerdown', onTap);
 }
 
 function triggerCheat(onTrigger) {
