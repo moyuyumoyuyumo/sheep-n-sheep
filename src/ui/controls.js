@@ -19,6 +19,7 @@ import { DEBUG } from '../config.js';
 import { playClick, playMatch, playWin, playLose, toggleMute, isMuted } from './audio.js';
 import { getLevelById, getNextLevel } from '../../levels/index.js';
 import { markPassed } from '../progress.js';
+import { useUndo, useShuffle, useRemove } from '../game/tools.js';
 
 const MATCH_ANIM_MS = 320;
 
@@ -95,6 +96,25 @@ export function bindControls(state, { rerender, startLevel, showMenu }) {
       muteBtn.textContent = toggleMute() ? '🔇' : '🔊';
     });
   }
+
+  // 道具按钮：三个都走同一个模板（有次数 → 调用 useFn → 微改 state → 重渲）
+  bindToolButton('btn-undo',    'undo',    useUndo);
+  bindToolButton('btn-shuffle', 'shuffle', useShuffle);
+  bindToolButton('btn-remove',  'remove',  useRemove);
+
+  function bindToolButton(btnId, toolKey, useFn) {
+    document.getElementById(btnId)?.addEventListener('click', () => {
+      if (isAnimating) return;
+      if (state.status !== 'playing') return;
+      if ((state.toolUses?.[toolKey] ?? 0) <= 0) return;
+      if (useFn(state)) {
+        state.toolUses[toolKey]--;
+        playClick();
+        if (DEBUG) console.log(`  · 用了 ${toolKey}，剩 ${state.toolUses[toolKey]} 次`);
+        rerender();
+      }
+    });
+  }
 }
 
 /**
@@ -119,6 +139,7 @@ function handleTileClick(state, tileId, rerender) {
   // 改 state：牌进槽
   tile.removed = true;
   state.slot   = addToSlot(state.slot, tile);
+  state.history.push(tile.id);                    // 记录入槽顺序（撤回 / 移除 道具用）
   playClick();
 
   if (DEBUG) {
@@ -130,6 +151,9 @@ function handleTileClick(state, tileId, rerender) {
     // 标记要消的牌 _matching → render 加 .matching class → 触发缩放消失动画
     const set = new Set(matchIdxs);
     state.slot.forEach((t, i) => { if (set.has(i)) t._matching = true; });
+    // 被消除的牌从 history 里拿掉（已不能被撤回）
+    const matchedIds = new Set(state.slot.filter(t => t._matching).map(t => t.id));
+    state.history = state.history.filter(id => !matchedIds.has(id));
     rerender();                                  // 第一帧：消失动画进行中
     playMatch();
 

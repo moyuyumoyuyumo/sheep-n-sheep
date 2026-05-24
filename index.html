@@ -22,6 +22,25 @@
             <!-- 底部槽：7 个格子，render.js 填入 -->
             <div id="slot" class="slot"></div>
 
+            <!-- 道具栏：render.js 控制次数 + disabled -->
+            <div id="toolbar" class="toolbar">
+                <button id="btn-undo" class="btn-tool" type="button" title="撤回最后一张">
+                    <span class="tool-icon">↶</span>
+                    <span class="tool-name">撤回</span>
+                    <span class="tool-count" id="tool-count-undo">3</span>
+                </button>
+                <button id="btn-shuffle" class="btn-tool" type="button" title="洗牌">
+                    <span class="tool-icon">🔀</span>
+                    <span class="tool-name">洗牌</span>
+                    <span class="tool-count" id="tool-count-shuffle">2</span>
+                </button>
+                <button id="btn-remove" class="btn-tool" type="button" title="移除前 3 张">
+                    <span class="tool-icon">⤴</span>
+                    <span class="tool-name">移除</span>
+                    <span class="tool-count" id="tool-count-remove">1</span>
+                </button>
+            </div>
+
             <p class="muted hint">
                 白色清晰的牌可以点（上层）<br>
                 灰色的被压住，要先把上面的清掉<br>

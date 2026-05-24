@@ -7,14 +7,20 @@
 //   slot     Array<Tile>            底部槽（长度 ≤ SLOT_CAPACITY）
 //   status   'idle' | 'menu' | 'playing' | 'won' | 'lost'   当前阶段
 //   levelId  string | null          当前关卡 id
+//   history  Array<number>          入槽 tileId 顺序（撤回 / 移除 道具用）
+//   toolUses { undo, shuffle, remove }  剩余道具次数
 
 import { resetTileIds } from './game/tile.js';
+
+const TOOL_INITIAL = { undo: 3, shuffle: 2, remove: 1 };
 
 export const state = {
   tiles: [],
   slot: [],
   status: 'idle',
   levelId: null,
+  history: [],
+  toolUses: { ...TOOL_INITIAL },
 };
 
 /**
@@ -26,5 +32,7 @@ export function resetState() {
   state.slot = [];
   state.status = 'idle';
   state.levelId = null;
+  state.history = [];
+  state.toolUses = { ...TOOL_INITIAL };
   resetTileIds();
 }

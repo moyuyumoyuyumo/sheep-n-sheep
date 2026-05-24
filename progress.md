@@ -7,8 +7,8 @@
 
 ## 当前阶段
 
-**阶段 3 · 关卡系统 完成（本地打 tag v0.3）**
-等浏览器手动验证 → 网络恢复后 `git push --tags` → 阶段 4 道具系统。
+**阶段 4 · 道具系统 完成（本地打 tag v0.4）**
+阶段 1–4 全部代码到位，Node 单测 46/46 过。等浏览器人工验证 → 网络恢复后 `git push --tags`。
 
 ## 项目关键信息
 
@@ -58,11 +58,18 @@
 - [x] 3.5 胜负弹窗双按钮（`dataset.action='next'/'menu'/'replay'`）；won 不同文案（下一关 vs 全通关）
 - [x] 3.6 progress 更新 + commit + tag `v0.3`
 
+### 阶段 4 · 道具系统
+- [x] 4.1 撤回道具：`useUndo(state)` pop history → 恢复那张 tile.removed=false + 从 slot 移除
+- [x] 4.2 洗牌道具：`useShuffle(state)` 按 z 分层 Fisher-Yates 重排 (gridX, gridY)，差不变层结构
+- [x] 4.3 移除道具：`useRemove(state)` 抽 slot 前 3 张回牌堆 + history filter 掉
+- [x] 4.4 道具栏 UI：3 个按钮 + 右上角红点计数；耗尽 disabled；only playing 状态可见
+- [x] 4.5 `tests/test-tools.js` 道具单测 24/24 过
+- [x] 4.6 progress 更新 + commit + tag `v0.4`
+
 ## 进行中 / 待办
 
 - [ ] 0.9 网络恢复后 `git push --tags` + 在 GitHub Settings 开 Pages
-- [ ] 阶段 1–3 浏览器手动验证（点击 / 三消 / 弹窗 / 重开 / 动画 / 音效 / 选关 / 进度）
-- [ ] 阶段 4 道具系统：撤回 / 洗牌 / 移除
+- [ ] 阶段 1–4 浏览器手动验证（点击 / 三消 / 弹窗 / 动画 / 音效 / 选关 / 进度 / 道具）
 
 ## 笔记 / 待澄清的问题
 
@@ -77,6 +84,10 @@
 - 3.4 `progress.js` 所有读写都 `try/catch` 静默失败（隐私模式 / 配额满不抛）
 - 3.5 弹窗按钮用 `dataset.action`，render.js 负责设置，controls.js 委托事件按 action 分发
 - 3.5 won 状态会同时调 `markPassed(levelId)` 创建下次进入菜单时下一关的解锁状态
+- 4.1 入槽时 `controls.js` 调 `state.history.push(tile.id)`；三消后立刻从 history 里拿掉那 3 个 id（不能撤回已消除的）
+- 4.2 `useShuffle` 按 z 分层 — 不跨层交换位置，避免底层跨到顶层导致拓扑崩
+- 4.3 `useRemove` 抽的是 slot “头 3 张”，不是尾，因为头部才是最难凑齐的（同 symbol 被 addToSlot 挤到头后部那些怎么都凑不齐）
+- 4.4 道具械次数存在 `state.toolUses`，resetState 刷回 `{undo:3, shuffle:2, remove:1}`；每关开始都重置（没持久化）
 
 ## 历史会话
 
@@ -86,3 +97,4 @@
 | 2026-05-24 | 阶段 1 全程：数据层 → UI → 弹窗，本地 tag v0.1 | 1.6/1.8b 未手动验证 |
 | 2026-05-24 | 阶段 2 视觉打磨：动画 / 反馈 / 音效 / 美化 / 移动适配，tag v0.2 | 未人工验证 |
 | 2026-05-24 | 阶段 3 关卡系统：多关多层 / 选关界面 / localStorage 进度，tag v0.3 | 未人工验证 |
+| 2026-05-24 | 阶段 4 道具系统：撤回 / 洗牌 / 移除 + 24 个道具单测，tag v0.4 | 一口气从阶段 2 做到 4 |

@@ -37,6 +37,7 @@ export function render(state) {
   renderMenu(state);
   renderBoard(state);
   renderSlot(state);
+  renderToolbar(state);
   renderStatus(state);
   renderModal(state);
 }
@@ -224,4 +225,27 @@ function renderMenu(state) {
     `;
     grid.appendChild(card);
   }
+}
+
+/**
+ * 道具栏：只在 status === 'playing' 时显示。
+ * 次数推到按钮右上角红点；耗尽 → button.disabled。
+ */
+function renderToolbar(state) {
+  const toolbar = document.getElementById('toolbar');
+  if (!toolbar) return;
+
+  toolbar.classList.toggle('hidden', state.status !== 'playing');
+
+  const setCount = (toolKey, btnId, countId) => {
+    const count = state.toolUses?.[toolKey] ?? 0;
+    const countEl = document.getElementById(countId);
+    const btnEl = document.getElementById(btnId);
+    if (countEl) countEl.textContent = count;
+    if (btnEl) btnEl.disabled = count <= 0;
+  };
+
+  setCount('undo',    'btn-undo',    'tool-count-undo');
+  setCount('shuffle', 'btn-shuffle', 'tool-count-shuffle');
+  setCount('remove',  'btn-remove',  'tool-count-remove');
 }

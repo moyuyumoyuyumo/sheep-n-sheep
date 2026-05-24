@@ -453,6 +453,79 @@ h1 {
   flex-wrap: wrap;
 }
 
+/* ─── 道具栏 ───────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+}
+
+.btn-tool {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  min-width: 76px;
+  background: linear-gradient(135deg, #ffffff, #fef3c7);
+  border: 1px solid rgba(252, 211, 77, 0.7);
+  border-radius: 10px;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.15s ease;
+}
+
+.btn-tool:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.btn-tool:active:not(:disabled) {
+  transform: translateY(0) scale(0.96);
+}
+
+.btn-tool:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tool-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.tool-name {
+  font-size: 0.75rem;
+  color: var(--accent-d);
+  margin-top: 0.2rem;
+  font-weight: 600;
+}
+
+.tool-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #fb923c;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.btn-tool:disabled .tool-count {
+  background: var(--muted);
+}
+
 /* ─── 移动端适配 ──────────────────── */
 @media (max-width: 480px) {
   :root { --tile-size: 50px; }
