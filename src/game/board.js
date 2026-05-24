@@ -10,11 +10,20 @@ import { createTile } from './tile.js';
  * 把关卡里的简单 { symbol, gridX, gridY, z } 喂给 createTile，
  * 得到带 id、带 removed 字段的真正牌对象。
  *
- * @param {object} level - 关卡对象，需要有 tiles 字段
+ * 关卡有两种数据形式：
+ *   1) 静态 tiles 数组：level.tiles
+ *   2) 工厂函数：level.buildTiles()（每次返回不同 symbol 分布）
+ * 优先使用工厂函数，没有则 fallback 静态。
+ *
+ * @param {object} level
  * @returns {Array} 牌对象数组
  */
 export function buildBoard(level) {
-  return level.tiles.map(t => createTile({
+  const rawTiles = typeof level.buildTiles === 'function'
+    ? level.buildTiles()
+    : level.tiles;
+
+  return rawTiles.map(t => createTile({
     symbol: t.symbol,
     gridX:  t.gridX,
     gridY:  t.gridY,

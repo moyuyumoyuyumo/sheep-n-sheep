@@ -7,8 +7,8 @@
 
 ## 当前阶段
 
-**阶段 4 · 道具系统 完成（本地打 tag v0.4）**
-阶段 1–4 全部代码到位，Node 单测 46/46 过。等浏览器人工验证 → 网络恢复后 `git push --tags`。
+**阶段 5 · 高难度关卡扩展 完成（本地打 tag v0.5）**
+阶段 1–5 全部代码到位，Node 单测 **88/88** 过（board 6 + slot 22 + tools 24 + builders 36）。等浏览器人工验证 → 网络恢复后 `git push --tags`。
 
 ## 项目关键信息
 
@@ -20,7 +20,7 @@
 - 默认分支：`main`
 - noreply 邮箱：`287223318+moyuyumoyuyumo@users.noreply.github.com`
 - 本地开发：`npm start` → <http://localhost:5500>（不依赖 Live Server 扩展）
-- 单元测试：`npm test`（Node 跑 `tests/test-board.js` + `tests/test-slot-rules.js`）
+- 单元测试：`npm test`（Node 跑 board / slot-rules / tools / builders 4 套）
 
 ## 已完成
 
@@ -66,10 +66,23 @@
 - [x] 4.5 `tests/test-tools.js` 道具单测 24/24 过
 - [x] 4.6 progress 更新 + commit + tag `v0.4`
 
+### 阶段 5 · 高难度关卡扩展
+- [x] 5.1 `levels/builders.js` 抽离 `fromLayers({ symbolPool, layers })` 工厂：grid 字符串 `'#'` 摆位 + Fisher-Yates 随机分配 symbol，每开新局位置都不同
+- [x] 5.2 `src/game/board.js` 兼容动态工厂：`buildBoard` 优先调 `level.buildTiles()`，否则回退静态 `level.tiles`
+- [x] 5.3 重写 level-02 为 **错层迷宫**（36 张 / 6 symbol / 3 层全错位 0.5+1.0）
+- [x] 5.4 重写 level-03 为 **金字塔**（60 张 / 10 symbol / 4 层 6×5→5×4→3×2→2×2）
+- [x] 5.5 新增 level-04 **高塔**（90 张 / 10 symbol / 5 层双底层堆叠）
+- [x] 5.6 新增 level-05 **深渊**（144 张 / 12 symbol / 6 层瀑布形，参考真"羊了个羊"二关）
+- [x] 5.7 `levels/index.js` 注册 04 / 05
+- [x] 5.8 `tests/test-builders.js` 36/36 过（基础展开 / `.` 跳过 / 错误抛 / 随机性 / 4 关数据完整性）
+- [x] 5.9 `package.json` test script 串联 4 套
+- [x] 5.10 progress 更新 + commit + tag `v0.5`
+
 ## 进行中 / 待办
 
 - [ ] 0.9 网络恢复后 `git push --tags` + 在 GitHub Settings 开 Pages
-- [ ] 阶段 1–4 浏览器手动验证（点击 / 三消 / 弹窗 / 动画 / 音效 / 选关 / 进度 / 道具）
+- [ ] 阶段 1–5 浏览器手动验证（点击 / 三消 / 弹窗 / 动画 / 音效 / 选关 / 进度 / 道具 / 新关卡可玩性）
+- [ ] level-04 / level-05 手动试通关，观察难度曲线是否合理（太难就给道具加额度，太简单就再加层）
 
 ## 笔记 / 待澄清的问题
 
@@ -88,6 +101,10 @@
 - 4.2 `useShuffle` 按 z 分层 — 不跨层交换位置，避免底层跨到顶层导致拓扑崩
 - 4.3 `useRemove` 抽的是 slot “头 3 张”，不是尾，因为头部才是最难凑齐的（同 symbol 被 addToSlot 挤到头后部那些怎么都凑不齐）
 - 4.4 道具械次数存在 `state.toolUses`，resetState 刷回 `{undo:3, shuffle:2, remove:1}`；每关开始都重置（没持久化）
+- 5.1 关卡现在有两种数据形式：静态 `tiles[]` 数组（level-01 保留作为最简单 sanity）+ 动态 `buildTiles()` 函数（level-02~05），后者每次开局重洗 symbol
+- 5.1 `fromLayers` 强校验：总牌数必须是 3 的倍数 + symbol 池不能空 → 关卡设计时少摆漏摆会立即抛错而不是开局后才发现
+- 5.1 每个 symbol 一定刚好分到 `(总牌数 / 3 / 池大小)` 套，余数按池顺序前缀多分 1 套；上面 4 关都设计成整除关系所以每种 symbol 数量完全相等
+- 5.6 level-05 的 6×4=24 张顶部 4 层都从 (1, *) 起，故意让底层第 0 列和第 7 列变成只露一行/两行的"易点位"诱导玩家先吃掉底两边，但牌池被洗过去就埋雷了
 
 ## 历史会话
 
@@ -98,3 +115,4 @@
 | 2026-05-24 | 阶段 2 视觉打磨：动画 / 反馈 / 音效 / 美化 / 移动适配，tag v0.2 | 未人工验证 |
 | 2026-05-24 | 阶段 3 关卡系统：多关多层 / 选关界面 / localStorage 进度，tag v0.3 | 未人工验证 |
 | 2026-05-24 | 阶段 4 道具系统：撤回 / 洗牌 / 移除 + 24 个道具单测，tag v0.4 | 一口气从阶段 2 做到 4 |
+| 2026-05-24 | 阶段 5 高难度关卡：fromLayers 工厂 + 4 关动态化（36/60/90/144 张）+ 36 个 builders 单测，tag v0.5 | 用户反馈"后面关卡太简单"后立刻补 |
