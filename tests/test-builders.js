@@ -18,6 +18,7 @@ import { level03 } from '../levels/level-03.js';
 import { level04 } from '../levels/level-04.js';
 import { level05 } from '../levels/level-05.js';
 import { level06 } from '../levels/level-06.js';
+import { level07 } from '../levels/level-07.js';
 
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('  阶段 5 测试 · 关卡构建器 fromLayers');
@@ -121,6 +122,7 @@ checkLevel(level03,  60, 10);
 checkLevel(level04,  90, 10);
 checkLevel(level06, 264,  8);
 checkLevel(level05, 144, 12);
+checkLevel(level07, 156, 13);
 
 // ─── 汇总 ───────────────────────────────────────────
 console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

@@ -1,0 +1,19 @@
+# Netlify 部署配置 —— 咩了个咩
+# 这是零依赖的纯静态站点（index.html + ES modules），不需要任何构建步骤。
+# publish = "." 表示直接把项目根目录作为网站根发布。
+
+[build]
+  publish = "."
+  command = ""
+
+# 显式保证 .js 以 ES module 能识别的 MIME 类型返回。
+# （Netlify 默认已正确，这里加一道保险，避免个别环境把 .js 当 octet-stream 拒绝执行）
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "text/javascript; charset=utf-8"
+
+[[headers]]
+  for = "/*.mjs"
+  [headers.values]
+    Content-Type = "text/javascript; charset=utf-8"

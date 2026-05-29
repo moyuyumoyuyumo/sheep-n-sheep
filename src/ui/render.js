@@ -111,41 +111,100 @@ function renderBoard(state) {
     board.appendChild(el);
   }
 
-  // 关键：窄屏自适应。板子比容器宽（如 level-06 14×50=700px > 手机屏）时
-  // 按比例 scale 缩小，避免左侧切边。
-  fitBoardScale(board, maxX, maxY);
+  // 板子永远以自然尺寸渲染；超宽时由 .board-viewport 横向滚动
+  fitBoardViewport(board, maxX, maxY);
+  ensureViewportDragBound();
 }
 
 /**
- * 让 board 内容刚好放进父容器宽度。
- * 实现：先清掉旧 transform → 测父容器可用宽度 → 算 scale → 重设 transform。
- * 注意：scale 不影响布局尺寸，所以同时修正 board 自身 height 让下方道具栏不被遮。
+ * 配置板子视口：
+ *   1. 清掉历史 transform/scale（避免上次缩放残留）
+ *   2. 始终用自然尺寸，让左端的牌从屏幕左边显示
+ *   3. 板子比视口宽 → 给视口加 .scrollable 类（CSS 显示「←左右滑动→」提示）
+ *   4. 滚动位置归零，确保进场看到最左端
  */
-function fitBoardScale(board, maxX, maxY) {
+function fitBoardViewport(board, maxX, maxY) {
   const naturalW = maxX * TILE_SIZE;
   const naturalH = maxY * TILE_SIZE;
 
-  // 父容器（.game-stage）的可用内宽
-  const parent = board.parentElement;
-  if (!parent) return;
-  const parentW = parent.clientWidth - 4;     // 留 2px 安全边
+  // 清掉旧 fitBoardScale 留下的 transform（旧版关卡可能有残留）
+  board.style.transform       = '';
+  board.style.transformOrigin = '';
+  board.style.marginLeft      = '';
+  board.style.width  = naturalW + 'px';
+  board.style.height = naturalH + 'px';
 
-  // 装得下：恢复默认
-  if (naturalW <= parentW) {
-    board.style.transform = '';
-    board.style.transformOrigin = '';
-    board.style.height = naturalH + 'px';
-    board.style.marginLeft = '';
-    return;
-  }
+  const viewport = board.parentElement;     // .board-viewport
+  if (!viewport) return;
 
-  // 装不下：按比例缩，左对齐 + 通过 margin 把因 scale 留下的右侧空白吃掉
-  const scale = parentW / naturalW;
-  board.style.transform       = `scale(${scale})`;
-  board.style.transformOrigin = 'top left';
-  // 高度按 scale 修正，让下方 slot/toolbar 不会顶上来或留大空白
-  board.style.height          = (naturalH * scale) + 'px';
-  board.style.marginLeft      = '0';
+  const viewportW = viewport.clientWidth;
+  const isWide = naturalW > viewportW + 2;
+  viewport.classList.toggle('scrollable', isWide);
+
+  // 进场归零：让用户先看到最左端的牌
+  viewport.scrollLeft = 0;
+}
+
+// ─── 鼠标拖拽 pan-scroll：桌面用户也能拖动板子 ─────────────
+// 手机的 touch 由 overflow-x:auto + touch-action:pan-x 原生处理，
+// 这里只补桌面鼠标。tile 上点击仍走原 controls.js 流程。
+let _viewportDragBound = false;
+function ensureViewportDragBound() {
+  if (_viewportDragBound) return;
+  const viewport = document.querySelector('.board-viewport');
+  if (!viewport) return;
+
+  let isDown = false;
+  let startClientX = 0;
+  let startScroll = 0;
+  let dragged = false;
+  const DRAG_THRESHOLD = 4;   // 移动超过此像素才算拖动（小幅抖动当点击）
+
+  viewport.addEventListener('pointerdown', (e) => {
+    // 仅鼠标走拖拽（触摸交给原生 overflow 滚动）
+    if (e.pointerType !== 'mouse') return;
+    isDown = true;
+    dragged = false;
+    startClientX = e.clientX;
+    startScroll = viewport.scrollLeft;
+  });
+
+  viewport.addEventListener('pointermove', (e) => {
+    if (!isDown) return;
+    const dx = e.clientX - startClientX;
+    if (!dragged && Math.abs(dx) > DRAG_THRESHOLD) {
+      dragged = true;
+      viewport.classList.add('dragging');
+      try { viewport.setPointerCapture(e.pointerId); } catch {}
+    }
+    if (dragged) {
+      viewport.scrollLeft = startScroll - dx;
+      e.preventDefault();
+    }
+  });
+
+  const endDrag = (e) => {
+    if (!isDown) return;
+    isDown = false;
+    if (dragged) {
+      viewport.classList.remove('dragging');
+      try { viewport.releasePointerCapture(e.pointerId); } catch {}
+      // 抑制即将到来的 click（拖完手松开浏览器会派 click 到 tile 上）
+      const blockClick = (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+        viewport.removeEventListener('click', blockClick, true);
+      };
+      viewport.addEventListener('click', blockClick, true);
+      // 防御：若 click 一直不来，下一帧清掉拦截
+      setTimeout(() => viewport.removeEventListener('click', blockClick, true), 50);
+    }
+  };
+  viewport.addEventListener('pointerup',     endDrag);
+  viewport.addEventListener('pointercancel', endDrag);
+  viewport.addEventListener('pointerleave',  endDrag);
+
+  _viewportDragBound = true;
 }
 
 /**

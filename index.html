@@ -17,8 +17,11 @@
         </header>
 
         <main class="game-stage">
-            <!-- 牌堆容器：render.js 会在这里 absolute 摆牌 -->
-            <div id="board" class="board"></div>
+            <!-- 板子视口：板宽超屏时启用左右滑动（手机原生 pan + 桌面鼠标拖拽） -->
+            <div class="board-viewport">
+                <!-- 牌堆容器：render.js 会在这里 absolute 摆牌 -->
+                <div id="board" class="board"></div>
+            </div>
 
             <!-- 底部槽：7 个格子，render.js 填入 -->
             <div id="slot" class="slot"></div>
