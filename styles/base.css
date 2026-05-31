@@ -26,6 +26,9 @@
 /* ─── 全局排版 ───────────────────────────────────── */
 html, body {
   height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;   /* 杜绝页面级横向滚动：板子超宽只在 .board-viewport 内部滑动（修微信 X5 内核左侧被裁问题） */
 }
 
 body {
@@ -37,6 +40,8 @@ body {
 
 /* ─── 入口容器 ───────────────────────────────────── */
 #app {
+  width: 100%;
+  max-width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -44,6 +49,7 @@ body {
   justify-content: center;
   padding: 2rem;
   text-align: center;
+  overflow-x: hidden;   /* 防止子元素擑宽整个页面 */
 }
 
 h1 {
@@ -110,6 +116,11 @@ h1 {
 
 /* ─── 游戏舞台 ────────────────────────────────────── */
 .game-stage {
+  /* 必须锁定宽度：否则 .board-viewport 的 width:100% 无法解析，
+     超宽的板子会反过来撑宽整个 stage，导致居中后左侧被裁 */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -124,6 +135,7 @@ h1 {
 .board-viewport {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;     /* iOS 平滑 momentum 滚动 */
